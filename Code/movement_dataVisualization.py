@@ -11,11 +11,11 @@ import os
 import datetime
 import matplotlib.pyplot as plt
 
+from geolocation.main import GoogleMaps
+
 
 x = datetime.datetime.now()
 now = str(x)[0:10] 
-
-
 
 
 
