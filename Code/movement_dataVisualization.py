@@ -48,4 +48,4 @@ plt.savefig("../Figure/%s/%s.png"%(now,zone))
 plt.close()
     
 #print(ut.lat_long_to_grid(new_df["LAT"],new_df["LONG"],133,100))
-#print(pd.to_datetime(new_df['Date/Time'],format = "%Y/%m/%d %H:%M:%S"))
+print(pd.to_datetime(new_df['Date/Time']))
