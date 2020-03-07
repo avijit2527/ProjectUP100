@@ -23,6 +23,7 @@ import matplotlib.animation as animation
 from matplotlib import style
 import matplotlib.cbook as cbook
 import matplotlib.image as image
+import pandas as pd
 
 
 
@@ -267,6 +268,12 @@ class RunAgents:
     
     def train(self, iterations):
         if(self.training):
+            allTimes = pd.read_excel("../Dataset/DateRange.xlsx").values
+            with open("../Files/rewardMap", 'rb') as fp:
+                rewardStateMap = pickle.load(fp)
+            #rewardStateMap =  (np.load("../Files/rewardMap.npy",allow_pickle=True))
+            print(type(rewardStateMap))
+            
             for i in range(iterations):
                 print(i)
                 for j in range(self.num_agents):
@@ -276,29 +283,47 @@ class RunAgents:
                 done = False
                 agent = 0
                 episode_length = 0
-                while (not done) and episode_length < self.max_iter :
-                    episode_length += 1
-                    if(random.random() < self.reward_frequncy):
-                        temp_reward_state = random.sample(self.all_reward_states,1)[0]
-                        self.reward_states[tuple(temp_reward_state)] = self.reward_parameter
+                #while (not done) and episode_length < self.max_iter : 1547290800000000000
+                #print(rewardStateMap)
+                for iTime in allTimes:
+                    #print(iTime)
+                    agentLocation = []
+                    for agentStep in range(self.num_agents):
+                        print(self.find_location(agentStep)[0])
+                        episode_length += 1
+                        print(iTime[0]) 
+                        print(episode_length)
                     
-                    move = self.agents[agent].epsilon_greedy(self.find_location(agent), self.possible_moves(agent))
-                    reward, done = self.step(agent,move)
-                    self.agents[agent].updateQ(reward, self.find_location(agent), self.possible_moves(agent))
-                    agent = (agent + 1) % self.num_agents
-                    if i%iterations == iterations-1:
-                        #print(episode_length)
-                        self.showGrid(self.grid,episode_length,reward)
-                        #time.sleep(1)
+                        move = self.agents[agent].epsilon_greedy(self.find_location(agent), self.possible_moves(agent))
+                        reward, done = self.step(agent,move)
+                        self.agents[agent].updateQ(reward, self.find_location(agent), self.possible_moves(agent))
+                        agent = (agent + 1) % self.num_agents
+                        if i%iterations == iterations-1:
+                            #print(episode_length)
+                            self.showGrid(self.grid,episode_length,reward)
+                            #time.sleep(1)
+
+                        if(episode_length >= 24):
+
+
                         
+            
+                        #print(self.reward_states)
+                    
+                    if iTime[0] in rewardStateMap:
+                        listOfStates = rewardStateMap[iTime[0]]
+                        for st in listOfStates:
+                            print("here",episode_length)
+                            self.reward_states[tuple(st)] = self.reward_parameter
+                            
                     for reward_state in self.reward_states.keys():
                         self.reward_states[reward_state] -= (1/self.num_agents)
                         
                     delete = [key for key in self.reward_states if self.reward_states[key] <= 0]     
                    
                     for key in delete: del self.reward_states[key] 
-            
-                    #print(self.reward_states)     
+                print(episode_length)
+                    
                        
             coverage = self.calculate_coverage(self.k_coverage)   
             return coverage                
@@ -310,8 +335,8 @@ class RunAgents:
         grid = grid_main.copy()
 
         fig,ax = plt.subplots()
-        img = plt.imread("../Figure/map.png")
-        ax.imshow(img,origin='lower', extent=[0, 64, 0, 102])
+        img = plt.imread("../Figure/KANPUR.png")
+        ax.imshow(img,origin='lower', extent=[-1, 10, -1, 13])
         ax.title.set_text("Reward: %4.4f"%(reward))
         ax.axes.get_xaxis().set_visible(False)
         ax.axes.get_yaxis().set_visible(False)
@@ -375,17 +400,17 @@ for run in range(number_of_runs):
             
      
     print("Run No. %d"%(run))
-    num_agents_array = np.arange(15,16)       #Number of agents in the grid
+    num_agents_array = np.arange(10,11)       #Number of agents in the grid
     for num_agents in num_agents_array:
         beta_array = [0.005] #np.linspace(-20,20,num=50)
         for beta in beta_array:
             print("Run = %d, Beta: %2.2f, Num Agents: %2.2d"%(run, beta, num_agents))
             agents = np.empty([num_agents],dtype = GridWorld) 
-            game = RunAgents(64,102,num_agents,True,beta)   
+            game = RunAgents(10,13,num_agents,True,beta)   
             for i in range(num_agents):
                 agents[i] = GridWorld(epsilon = 0.2)
             game.startTraining(agents)
-            coverage = game.train(5000)
+            coverage = game.train(1)
             coverage_array.append([num_agents,coverage])
             game.saveStates()
             
