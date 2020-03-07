@@ -19,7 +19,9 @@ class Utilities:
     @staticmethod
     def lat_long_to_grid(df_lat,df_long, width, height):
         _, hist_lat = np.histogram(df_lat, bins = height)
+        np.save("../Files/hist_lat",hist_lat)
         _, hist_long = np.histogram(df_long, bins = width)
+        np.save("../Files/hist_long",hist_long)
         #print(np.digitize(df_long, hist_long))
         return np.digitize(df_lat, hist_lat), np.digitize(df_long, hist_long)
      

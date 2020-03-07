@@ -269,6 +269,8 @@ class RunAgents:
     def train(self, iterations):
         if(self.training):
             allTimes = pd.read_excel("../Dataset/DateRange.xlsx").values
+            hist_lat = np.load("../Files/hist_lat.npy")
+            hist_long = np.load("../Files/hist_long.npy")
             with open("../Files/rewardMap", 'rb') as fp:
                 rewardStateMap = pickle.load(fp)
             #rewardStateMap =  (np.load("../Files/rewardMap.npy",allow_pickle=True))
@@ -285,14 +287,14 @@ class RunAgents:
                 episode_length = 0
                 #while (not done) and episode_length < self.max_iter : 1547290800000000000
                 #print(rewardStateMap)
+                agentLocation = [[] for i in range(self.num_agents)]
                 for iTime in allTimes:
                     #print(iTime)
-                    agentLocation = []
                     for agentStep in range(self.num_agents):
-                        print(self.find_location(agentStep)[0])
+                        currentLoc = (self.find_location(agentStep))
                         episode_length += 1
-                        print(iTime[0]) 
-                        print(episode_length)
+                        #print(iTime[0]) 
+                        #print(episode_length)
                     
                         move = self.agents[agent].epsilon_greedy(self.find_location(agent), self.possible_moves(agent))
                         reward, done = self.step(agent,move)
@@ -303,7 +305,13 @@ class RunAgents:
                             self.showGrid(self.grid,episode_length,reward)
                             #time.sleep(1)
 
-                        if(episode_length >= 24):
+                        if(episode_length >= 240):
+                            print(hist_lat[currentLoc[1]])
+                            latitude = random.uniform(hist_lat[currentLoc[1]],hist_lat[currentLoc[1]+1])
+                            longitude = random.uniform(hist_long[currentLoc[1]],hist_long[currentLoc[1]+1])
+                            agentLocation[agentStep].append([agentStep,iTime[0],latitude, longitude])
+
+                
 
 
                         
@@ -313,7 +321,6 @@ class RunAgents:
                     if iTime[0] in rewardStateMap:
                         listOfStates = rewardStateMap[iTime[0]]
                         for st in listOfStates:
-                            print("here",episode_length)
                             self.reward_states[tuple(st)] = self.reward_parameter
                             
                     for reward_state in self.reward_states.keys():
@@ -323,6 +330,14 @@ class RunAgents:
                    
                     for key in delete: del self.reward_states[key] 
                 print(episode_length)
+                frames = []
+                for agentStep in range(self.num_agents):
+                    df = pd.DataFrame(agentLocation[agentStep], columns = ["AgentId","Timestamp","Latitude","Longitude"])
+                    frames.append(df)
+                    #print(df.head) 
+                df = pd.concat(frames)
+                df.to_excel("../Results/trajectory.xlsx")
+                print(df)
                     
                        
             coverage = self.calculate_coverage(self.k_coverage)   
