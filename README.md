@@ -1,6 +1,10 @@
 # UP100
 ## Updates regarding project
 
+
+### Updates on 10th Mar, 2020:
+  1. The trajectory can be found inside Results folder. traj.html
+
 ### Updates on 3rd Mar, 2020:
   1. Below is the movement of the agents in the gridworld using Kanpur Data:
   ![](./GIF/2020-03-07/10/0.0050.gif)
