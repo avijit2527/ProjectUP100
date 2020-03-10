@@ -274,10 +274,9 @@ class RunAgents:
             with open("../Files/rewardMap", 'rb') as fp:
                 rewardStateMap = pickle.load(fp)
             #rewardStateMap =  (np.load("../Files/rewardMap.npy",allow_pickle=True))
-            print(type(rewardStateMap))
+            #print(type(rewardStateMap))
             
             for i in range(iterations):
-                print(i)
                 for j in range(self.num_agents):
                     self.agents[j].game_begin()
                 
@@ -306,9 +305,10 @@ class RunAgents:
                             #time.sleep(1)
 
                         if(episode_length >= 240):
-                            print(hist_lat[currentLoc[1]])
+                            print([currentLoc],agentStep)
+                            print(hist_long)
                             latitude = random.uniform(hist_lat[currentLoc[1]],hist_lat[currentLoc[1]+1])
-                            longitude = random.uniform(hist_long[currentLoc[1]],hist_long[currentLoc[1]+1])
+                            longitude = random.uniform(hist_long[currentLoc[0]],hist_long[currentLoc[0]+1])
                             agentLocation[agentStep].append([agentStep,iTime[0],latitude, longitude])
 
                 
@@ -329,7 +329,7 @@ class RunAgents:
                     delete = [key for key in self.reward_states if self.reward_states[key] <= 0]     
                    
                     for key in delete: del self.reward_states[key] 
-                print(episode_length)
+                #print(episode_length)
                 frames = []
                 for agentStep in range(self.num_agents):
                     df = pd.DataFrame(agentLocation[agentStep], columns = ["AgentId","Timestamp","Latitude","Longitude"])
@@ -337,7 +337,7 @@ class RunAgents:
                     #print(df.head) 
                 df = pd.concat(frames)
                 df.to_excel("../Results/trajectory.xlsx")
-                print(df)
+                #print(df)
                     
                        
             coverage = self.calculate_coverage(self.k_coverage)   
