@@ -29,9 +29,9 @@ convert_dict = {'LAT': float,
                } 
 
 zones = (df.Zone.unique())
-zone = "KANPUR"
-ruh_m = plt.imread('../Figure/%s.png'%(zone))
-new_df = df[df["Zone"] == zone]
+zone = "KANPUR CITY"
+#ruh_m = plt.imread('../Figure/%s.png'%(zone))
+new_df = df[df["District"] == zone]
 new_df = new_df.astype(convert_dict)
 new_df = new_df.reindex() 
 new_df.to_excel("../Dataset/%s.xlsx"%(zone)) 
@@ -45,7 +45,7 @@ ax.scatter(new_df['LONG'],new_df['LAT'] , zorder=1, alpha= 1, c='b', s=10)
 ax.set_title('Plotting Spatial Data on %s Map'%(zone))
 ax.set_xlim(BBox[0],BBox[1])
 ax.set_ylim(BBox[2],BBox[3])
-ax.imshow(ruh_m, zorder=0, extent = BBox, aspect= 'equal')
+#ax.imshow(ruh_m, zorder=0, extent = BBox, aspect= 'equal')
 if not os.path.exists("../Figure/%s"%(now)):
     os.makedirs("../Figure/%s"%(now))
     
