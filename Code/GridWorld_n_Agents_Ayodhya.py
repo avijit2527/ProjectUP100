@@ -111,7 +111,7 @@ class RunAgents:
         self.agents = np.empty([num_agents], dtype=GridWorld)
         self.all_reward_states = list(np.load("../Files/latlongGrid.npy"))
         self.reward_states = {}
-        self.max_iter = 1200
+        self.max_iter = 2000
 
         x = datetime.datetime.now()
         self.time = str(x)[0:10]
@@ -156,10 +156,10 @@ class RunAgents:
     def evaluate(self, ch):
         proximity_reward = 0
         location = self.find_location(ch)
-        for x in range(self.num_agents):
+        '''for x in range(self.num_agents):
             distance = self.proximity(ch, x)
             # - 1 for own distance exp(0)
-            proximity_reward += (math.exp(self.beta * distance) - 1)
+            proximity_reward += (math.exp(self.beta * distance) - 1)'''
 
         instant_reward = 0
         for y in self.reward_states.keys():
@@ -235,6 +235,7 @@ class RunAgents:
     def train(self, iterations):
         if(self.training):
             for i in range(iterations):
+                print("Iteration %d/%d"%(i+1,iterations))
                 for j in range(self.num_agents):
                     self.agents[j].game_begin()
 
@@ -266,14 +267,14 @@ class RunAgents:
                     self.agents[agent].updateQ(reward, self.find_location(
                         agent), self.possible_moves(agent))
                     agent = (agent + 1) % self.num_agents
-                    #if ((i % iterations) == (iterations - 1)):
+                    if ((i % iterations) == (iterations - 1)):
                     # print(episode_length)
-                    #    self.showGrid(self.grid, episode_length, reward)
+                        self.showGrid(self.grid, episode_length, reward)
                     # time.sleep(1)
                     '''print(self.find_location(agent))
                         print(self.hist_lat)
                         print(self.hist_long)'''
-                    if episode_length >= 500:
+                    if episode_length >= (self.max_iter - 500):
                         currentLoc = (self.find_location(agent))
                         longitude = random.uniform(
                             self.hist_long[currentLoc[1]], self.hist_long[currentLoc[1]+1])
@@ -369,7 +370,7 @@ for run in range(number_of_runs):
     coverage_array = []
 
     print("Run No. %d" % (run))
-    num_agents_array = np.arange(25, 26)  # Number of agents in the grid
+    num_agents_array = np.arange(20, 21)  # Number of agents in the grid
     for num_agents in num_agents_array:
         beta_array = [0.005]  # np.linspace(-20,20,num=50)
         for beta in beta_array:
@@ -388,6 +389,6 @@ for run in range(number_of_runs):
             game.startTraining(agents)
             # game.loadStates()
             coverage = game.train(
-                iterations=20)
+                iterations=50)
             coverage_array.append([num_agents, coverage])
             game.saveStates()
