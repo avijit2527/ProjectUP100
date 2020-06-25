@@ -19,6 +19,7 @@ import os
 import math
 import numpy as np
 import datetime
+from datetime import timedelta
 import glob
 from PIL import Image
 
@@ -111,10 +112,11 @@ class RunAgents:
         self.agents = np.empty([num_agents], dtype=GridWorld)
         self.all_reward_states = list(np.load("../Files/latlongGrid.npy"))
         self.reward_states = {}
-        self.max_iter = 2000
+        self.max_iter = 1100
 
         x = datetime.datetime.now()
-        self.time = str(x)[0:10]
+        now = str(x)[0:10]
+        self.time = datetime.datetime.strptime(now, '%Y-%m-%d')
 
         self.visited_states = []
         self.k_coverage = 50 * self.num_agents  # last k steps to calculate coverage
@@ -156,17 +158,17 @@ class RunAgents:
     def evaluate(self, ch):
         proximity_reward = 0
         location = self.find_location(ch)
-        '''for x in range(self.num_agents):
+        for x in range(self.num_agents):
             distance = self.proximity(ch, x)
             # - 1 for own distance exp(0)
-            proximity_reward += (math.exp(self.beta * distance) - 1)'''
+            proximity_reward += (math.exp(self.beta * distance) - 1)
 
         instant_reward = 0
         for y in self.reward_states.keys():
             distance = self.find_reward_state_distance(np.array(y), ch)
             if y[0] == location[0] and y[1] == location[1]:
                 # * math.exp(-self.beta * distance)
-                instant_reward += 1000 * self.reward_states[y]
+                instant_reward += 50 * self.reward_states[y]
             # print("Distance = %2.2f"%(distance))
             # print(self.reward_states[y]  * math.exp(-self.beta * distance) )
 
@@ -235,7 +237,7 @@ class RunAgents:
     def train(self, iterations):
         if(self.training):
             for i in range(iterations):
-                print("Iteration %d/%d"%(i+1,iterations))
+                print("Iteration %d/%d" % (i+1, iterations))
                 for j in range(self.num_agents):
                     self.agents[j].game_begin()
 
@@ -243,17 +245,24 @@ class RunAgents:
                 done = False
                 agent = 0
                 episode_length = 0
+                timeSlot = self.time - timedelta(hours=1) + timedelta(days=1) - timedelta(hours=5) - timedelta(minutes=30) #for indian timezone -5:30 is added
                 agentLocation = [[] for i in range(self.num_agents)]
                 while (not done) and episode_length < self.max_iter:
-                    if(episode_length < (self.max_iter/3)):
+                    if(episode_length < (self.max_iter/4)):
                         for agnt in self.agents:
                             agnt.setEpsilon(0.9)
-                    elif (episode_length < (self.max_iter/1.5)):
+                    elif (episode_length < (self.max_iter/3)):
                         for agnt in self.agents:
                             agnt.setEpsilon(0.6)
+                    elif (episode_length < (self.max_iter/2)):  
+                        for agnt in self.agents:
+                            agnt.setEpsilon(0.4)    
+                    elif (episode_length < (self.max_iter/1.5)):
+                        for agnt in self.agents:
+                            agnt.setEpsilon(0.3)
                     else:
                         for agnt in self.agents:
-                            agnt.setEpsilon(0.25)
+                            agnt.setEpsilon(0.1)
                     episode_length += 1
                     if(random.random() < self.reward_frequncy):
                         temp_reward_state = random.sample(
@@ -267,21 +276,24 @@ class RunAgents:
                     self.agents[agent].updateQ(reward, self.find_location(
                         agent), self.possible_moves(agent))
                     agent = (agent + 1) % self.num_agents
-                    if ((i % iterations) == (iterations - 1)):
-                    # print(episode_length)
-                        self.showGrid(self.grid, episode_length, reward)
+                    #if ((i % iterations) == (iterations - 1)):
+                        # print(episode_length)
+                    #    self.showGrid(self.grid, episode_length, reward)
                     # time.sleep(1)
                     '''print(self.find_location(agent))
                         print(self.hist_lat)
                         print(self.hist_long)'''
-                    if episode_length >= (self.max_iter - 500):
+                    if episode_length > (self.max_iter - num_agents * 24):
                         currentLoc = (self.find_location(agent))
                         longitude = random.uniform(
                             self.hist_long[currentLoc[1]], self.hist_long[currentLoc[1]+1])
                         latitude = random.uniform(
                             self.hist_lat[currentLoc[0]], self.hist_lat[currentLoc[0]+1])
                         agentLocation[agent].append(
-                            [agent, latitude, longitude])
+                            [agent, timeSlot, latitude, longitude])
+                        if((episode_length - (self.max_iter - num_agents * 24))% num_agents == 1):
+                            timeSlot = timeSlot + timedelta(hours=1)
+                        
 
                     for reward_state in self.reward_states.keys():
                         self.reward_states[reward_state] -= (1/self.num_agents)
@@ -297,7 +309,7 @@ class RunAgents:
             frames = []
             for agentStep in range(self.num_agents):
                 df = pd.DataFrame(agentLocation[agentStep], columns=[
-                    "AgentId", "Latitude", "Longitude"])
+                    "AgentId", "TimeSlot", "Latitude", "Longitude"])
                 frames.append(df)
             df = pd.concat(frames)
             print(df.head())
@@ -309,9 +321,9 @@ class RunAgents:
         grid = grid_main.copy()
 
         fig, ax = plt.subplots()
-        img = plt.imread("../Figure/Ayodha.png")
+        '''img = plt.imread("../Figure/Ayodha.png")
         ax.imshow(img, origin='lower',
-                  extent=[-1, self.width, -1, self.height])
+                  extent=[-1, self.width, -1, self.height])'''
         ax.title.set_text("Reward: %4.4f" % (reward))
         ax.axes.get_xaxis().set_visible(False)
         ax.axes.get_yaxis().set_visible(False)
@@ -370,9 +382,9 @@ for run in range(number_of_runs):
     coverage_array = []
 
     print("Run No. %d" % (run))
-    num_agents_array = np.arange(20, 21)  # Number of agents in the grid
+    num_agents_array = np.arange(25, 26)  # Number of agents in the grid
     for num_agents in num_agents_array:
-        beta_array = [0.005]  # np.linspace(-20,20,num=50)
+        beta_array = [0.01]  # np.linspace(-20,20,num=50)
         for beta in beta_array:
             print("Run = %d, Beta: %2.2f, Num Agents: %2.2d" %
                   (run, beta, num_agents))
@@ -389,6 +401,6 @@ for run in range(number_of_runs):
             game.startTraining(agents)
             # game.loadStates()
             coverage = game.train(
-                iterations=50)
+                iterations=2000)
             coverage_array.append([num_agents, coverage])
             game.saveStates()

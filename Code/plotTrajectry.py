@@ -10,9 +10,9 @@ print(df_crime)
 
 
 allAgents = df.AgentId.unique()
-colormap = {0: "green", 1: "black", 2: "violet", 3: "green", 4: "blue", 5: "teal", 6: "purple", 7: "magenta", 8: "black", 9: "red",
-            19: "violet", 10: "violet", 11: "red", 12: "green", 13: "blue", 14: "teal", 15: "purple", 16: "magenta", 17: "black", 18: "red",
-            20: "green", 21: "black", 22: "red", 23: "violet", 24: "blue", 25: "teal", 26: "purple", 27: "magenta", 28: "black", 29: "red",
+colormap = {0: "rosybrown", 1: "black", 2: "violet", 3: "green", 4: "blue", 5: "teal", 6: "purple", 7: "magenta", 8: "saddlebrown", 9: "red",
+            19: "indianred", 10: "violet", 11: "darkorange", 12: "olive", 13: "forestgreen", 14: "darkslategrey", 15: "purple", 16: "magenta", 17: "black", 18: "red",
+            20: "sienna", 21: "black", 22: "crimson", 23: "violet", 24: "blue", 25: "teal", 26: "purple", 27: "magenta", 28: "black", 29: "red",
             30: "green", 31: "violet", 32: "red", 33: "green", 34: "blue", 35: "teal", 36: "purple", 37: "magenta", 38: "black", 39: "red"}
 my_map = folium.Map(location=[26.7, 82], zoom_start=10)
 print(allAgents)

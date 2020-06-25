@@ -2,6 +2,11 @@
 ## Updates regarding project
 
 
+
+### Updates on 13th June, 2020:
+  1. First run python GridWorld_n_Agents_Ayodhya.py to generate the trajectory.xlsx file
+  2. Then run python plotTrajectry.py to plot the trajectory   
+
 ### Updates on 10th Mar, 2020:
   1. The trajectory can be found inside Results folder. traj.html
 
