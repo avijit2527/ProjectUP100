@@ -23,7 +23,11 @@ class Utilities:
         _, hist_long = np.histogram(df_long, bins = width)
         np.save("../Files/hist_long",hist_long)
         #print(np.digitize(df_long, hist_long))
-        return np.digitize(df_lat, hist_lat), np.digitize(df_long, hist_long)
+
+        latLong2D = []
+        for lat, lng in zip(np.digitize(df_lat, hist_lat), np.digitize(df_long, hist_long)):
+            latLong2D.append([lat, lng])
+        return list(latLong2D) , hist_lat, hist_long;
      
         
         
