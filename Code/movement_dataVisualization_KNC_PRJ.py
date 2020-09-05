@@ -25,11 +25,12 @@ df1 = pd.read_excel("../Dataset/KNC_PRJ.xlsx");
 df1['Createtime'] = pd.to_datetime(df1['Createtime'])
 df = df1[["EventId","Createtime","Type","Region","latitude","longitude"]];
 df = df.dropna();
-print(df.dtypes);
+print(df.size);
+print(df.columns);
 print(df["Type"].unique());
 print(df["Region"].unique());
 
-
+'''
 client = MongoClient(port=27017);
 db=client.conFusion;
 
@@ -39,3 +40,4 @@ x = datetime.datetime.now();
 for step in df.itertuples():
     print(step[2])
     db.crimes.insert_one({"eventId":step[1],"crimeTime":step[2],"type":step[3],"zone":step[4],"lat":step[5],"lng":step[6],"createdAt":x,"updatedAt":x});
+'''
