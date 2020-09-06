@@ -108,21 +108,23 @@ class GridWorld:
 
 class RunAgents:
     # width and height are the width and height of the gridworld
-    def __init__(self, zone, crimes, longitude=10, latitude=10, num_agents=2, training=False, beta=-5):
+    def __init__(self, zone, crimes, longitude=10, latitude=10, num_agents=2, training=False, beta=-5, beta_3 = -1):
         self.width = longitude
         self.height = latitude
         self.num_agents = num_agents
         self.beta = beta
         self.zone = zone;
+        self.beta_3 = beta_3;
 
         self.grid = -1 * np.ones(shape=(self.height, self.width), dtype=int)
 
         self.done = False
         self.agents = np.empty([self.num_agents], dtype=GridWorld)
-        print(crimes.head())
+        #print(crimes.head())
         (self.all_reward_states, self.hist_lat, self.hist_long)  = ut.lat_long_to_grid(crimes["lat"], crimes["lng"], self.width, self.height);
         self.reward_states = {}
         self.max_iter = 1100
+        self.distance_covered = 0;
 
 
 
@@ -225,8 +227,14 @@ class RunAgents:
         location = self.find_location(agent)
         new_location_x = location[0]
         new_location_y = location[1]
+
+        step_penalty = self.beta_3;
+        self.distance_covered += 1;
+
         if move != 's':
             self.grid[location[0]][location[1]] = -1
+            step_penalty = 0;
+            self.distance_covered -= 1;
         if move == 'd':
             new_location_x += 1
         if move == 'l':
@@ -236,7 +244,6 @@ class RunAgents:
         if move == 'r':
             new_location_y += 1
 
-        step_penalty = 0
         self.grid[new_location_x][new_location_y] = agent
         self.visited_states.append([new_location_x, new_location_y])
         reward, done = self.evaluate(agent)
@@ -328,10 +335,10 @@ class RunAgents:
                     "AgentId", "TimeSlot", "Latitude", "Longitude"])
                 frames.append(df)
             df = pd.concat(frames)
-            print(df.head())
+            #print(df.head())
             df.to_excel("../Results/trajectory_"+ self.zone +".xlsx")
             coverage = self.calculate_coverage(self.k_coverage)
-            return coverage
+            return self.distance_covered;
 
     def showGrid(self, grid_main, iteration, reward):
         grid = grid_main.copy()
@@ -388,13 +395,40 @@ class RunAgents:
 
 
 
+def plotDiagrams(coverage_array_over_multiple_runs,now):
+
+
+    coverage_array_over_multiple_runs = np.array(coverage_array_over_multiple_runs)   
+    np.save("coverage_vs_alpha_constant_initialization",coverage_array_over_multiple_runs)  
+
+
+
+    coverage_array_for_alpha_over_multiple_runs = np.load("./coverage_vs_alpha_constant_initialization.npy")
+
+
+    mean_coverage_array = np.mean(coverage_array_over_multiple_runs, axis = 0)
+    std_coverage_array = np.std(coverage_array_over_multiple_runs,axis = 0)
+
+    #Plotting coverage vs number of agents
+    fig, ax = plt.subplots()
+    ax.plot(mean_coverage_array.T[0],mean_coverage_array.T[1], c='r')
+    ax.fill_between(mean_coverage_array.T[0],mean_coverage_array.T[1] - std_coverage_array.T[1],mean_coverage_array.T[1] + std_coverage_array.T[1],alpha = 0.1)
+    plt.title("beta_3 vs Total_Distance_Covered")
+    plt.xlabel("beta_3")
+    plt.ylabel("Total_Distance_Covered")
+    if not os.path.exists("./Figure/%s/constant_initialization/"%(now)):
+        os.makedirs("./Figure/%s/constant_initialization/"%(now))
+    plt.savefig("./Figure/%s/constant_initialization/beta_3_vs_Total_Distance_Covered.png"%(now))
+    plt.close() 
+
+
 
 def runSingleAgent(zone,crimes, noOfLngGrid, noOfLatGrid):
     x = datetime.datetime.now();
     now = str(x)[0:10];
 
 
-    number_of_runs = 1;
+    number_of_runs = 100;
     epsilon = 0.4;
     coverage_array_over_multiple_runs = [];
     for run in range(number_of_runs):
@@ -405,26 +439,30 @@ def runSingleAgent(zone,crimes, noOfLngGrid, noOfLatGrid):
         num_agents_array = np.arange(25, 26)  # Number of agents in the grid
         for num_agents in num_agents_array:
             beta_array = [0.01]  # np.linspace(-20,20,num=50)
-            for beta in beta_array:
+            beta_3_array = np.linspace(-20,0,num=50)
+            for beta_3 in beta_3_array:
                 print("Run = %d, Beta: %2.2f, Num Agents: %2.2d" %
-                      (run, beta, num_agents))
+                      (run, beta_3, num_agents))
                 agents = np.empty([num_agents], dtype=GridWorld)
-                game = RunAgents(zone, crimes, noOfLngGrid, noOfLatGrid, num_agents, True, beta);
+                game = RunAgents(zone, crimes, noOfLngGrid, noOfLatGrid, num_agents, True, 0.01,beta_3);
                 '''if run <= (number_of_runs/2):
                     epsilon = 0.9
                 else:
                     epsilon = 0.2'''
 
 
-            for i in range(num_agents):
-                agents[i] = GridWorld(epsilon=epsilon)
+                for i in range(num_agents):
+                    agents[i] = GridWorld(epsilon=epsilon)
 
-            game.startTraining(agents)
-            # game.loadStates()
-            coverage = game.train(
-                iterations=2000)
-            coverage_array.append([num_agents, coverage])
-            game.saveStates()
+                game.startTraining(agents)
+                # game.loadStates()
+                distance_covered = game.train(
+                    iterations=1000)
+                print(distance_covered);
+                coverage_array.append([beta_3, distance_covered]);
+                game.saveStates()
+        coverage_array_over_multiple_runs.append(coverage_array);
+    plotDiagrams(coverage_array_over_multiple_runs,now);
 
 
 
@@ -443,7 +481,7 @@ def saveRoutes(db,zone):
 
     df = pd.read_excel("../Results/trajectory_"+zone+".xlsx");
 
-    print(df["TimeSlot"][0])
+    #print(df["TimeSlot"][0])
     x = datetime.datetime.now()
     for step in df.itertuples():
         print(step[2],zone)
@@ -462,9 +500,10 @@ if __name__ == "__main__":
         latLongRatio = latDiff/lngDiff;
         noOfLngGrid = 30;
         noOfLatGrid = (int)(latLongRatio * noOfLngGrid);
-        print(zone.zone, noOfLngGrid, noOfLatGrid);
+        #print(zone.zone, noOfLngGrid, noOfLatGrid);
         runSingleAgent(zone[10],crimes,noOfLngGrid,noOfLatGrid);
-        saveRoutes(db,zone[10]);
+        break;
+        #saveRoutes(db,zone[10]);
 
         
 
