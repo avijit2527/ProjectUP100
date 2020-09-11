@@ -119,7 +119,7 @@ class RunAgents:
 
         self.done = False
         self.agents = np.empty([self.num_agents], dtype=GridWorld)
-        print(crimes.head())
+        #print(crimes.head())
         (self.all_reward_states, self.hist_lat, self.hist_long)  = ut.lat_long_to_grid(crimes["lat"], crimes["lng"], self.width, self.height);
         self.reward_states = {}
         self.max_iter = 1100
@@ -328,7 +328,7 @@ class RunAgents:
                     "AgentId", "TimeSlot", "Latitude", "Longitude"])
                 frames.append(df)
             df = pd.concat(frames)
-            print(df.head())
+            #print(df.head())
             df.to_excel("../Results/trajectory_"+ self.zone +".xlsx")
             coverage = self.calculate_coverage(self.k_coverage)
             return coverage
@@ -443,12 +443,35 @@ def saveRoutes(db,zone):
 
     df = pd.read_excel("../Results/trajectory_"+zone+".xlsx");
 
-    print(df["TimeSlot"][0])
+    #print(df["TimeSlot"][0])
     x = datetime.datetime.now()
     for step in df.itertuples():
-        print(step[2],zone)
+        #print(step[2],zone);
+        loc = db.nearestlocations.find({
+            "zone" : zone,
+            "location": {
+             "$near": {
+              "$geometry": {
+               "type": "Point",
+               "coordinates": [step[4], step[5]]
+              },
+              "$maxDistance": 1000
+             }
+            }
+           });
+        df = pd.DataFrame(loc);
+        
+        lat = 0;
+        lng = 0;
+        if df.size>0:
+            print(df.iloc[0, :].location["coordinates"][0]);
+            lat = df.iloc[0, :].location["coordinates"][0];
+            lng = df.iloc[0, :].location["coordinates"][1];
+        else:
+            lat = step[4];
+            lng = step[5];
 
-        db.vehicles.update_one({"vehicleId" : str(step[2]),"zone":zone},{"$push": {"locations": {"_id":ObjectId(),"createdAt":x,"updatedAt":x,"timeSlot":step[3],"lat":step[4],"lng":step[5]}}})
+        db.vehicles.update_one({"vehicleId" : str(step[2]),"zone":zone},{"$push": {"locations": {"_id":ObjectId(),"createdAt":x,"updatedAt":x,"timeSlot":step[3],"lat":lat,"lng":lng}}});
 
 if __name__ == "__main__": 
     client = MongoClient(port=27017);    
