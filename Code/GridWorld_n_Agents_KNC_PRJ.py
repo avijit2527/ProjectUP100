@@ -108,12 +108,13 @@ class GridWorld:
 
 class RunAgents:
     # width and height are the width and height of the gridworld
-    def __init__(self, zone, crimes, longitude=10, latitude=10, num_agents=2, training=False, beta=-5):
+    def __init__(self, zone, crimes, longitude=10, latitude=10, num_agents=2, training=False, beta=-5, beta_3 = -1):
         self.width = longitude
         self.height = latitude
         self.num_agents = num_agents
         self.beta = beta
         self.zone = zone;
+        self.beta_3 = beta_3;
 
         self.grid = -1 * np.ones(shape=(self.height, self.width), dtype=int)
 
@@ -225,8 +226,12 @@ class RunAgents:
         location = self.find_location(agent)
         new_location_x = location[0]
         new_location_y = location[1]
+
+        step_penalty = self.beta_3;
+
         if move != 's':
             self.grid[location[0]][location[1]] = -1
+            step_penalty = 0;
         if move == 'd':
             new_location_x += 1
         if move == 'l':
@@ -236,7 +241,6 @@ class RunAgents:
         if move == 'r':
             new_location_y += 1
 
-        step_penalty = 0
         self.grid[new_location_x][new_location_y] = agent
         self.visited_states.append([new_location_x, new_location_y])
         reward, done = self.evaluate(agent)
@@ -299,16 +303,17 @@ class RunAgents:
                     '''print(self.find_location(agent))
                         print(self.hist_lat)
                         print(self.hist_long)'''
-                    if episode_length > (self.max_iter - self.num_agents * 24):
-                        currentLoc = (self.find_location(agent))
-                        longitude = random.uniform(
-                            self.hist_long[currentLoc[1]], self.hist_long[currentLoc[1]+1])
-                        latitude = random.uniform(
-                            self.hist_lat[currentLoc[0]], self.hist_lat[currentLoc[0]+1])
-                        agentLocation[agent].append(
-                            [agent, timeSlot, latitude, longitude])
-                        if((episode_length - (self.max_iter - self.num_agents * 24))% self.num_agents == 1):
-                            timeSlot = timeSlot + timedelta(hours=1)
+                    if ((i % iterations) == (iterations - 1)):
+                        if episode_length > (self.max_iter - self.num_agents * 24):
+                            currentLoc = (self.find_location(agent))
+                            longitude = random.uniform(
+                                self.hist_long[currentLoc[1]], self.hist_long[currentLoc[1]+1])
+                            latitude = random.uniform(
+                                self.hist_lat[currentLoc[0]], self.hist_lat[currentLoc[0]+1])
+                            agentLocation[agent].append(
+                                [agent, timeSlot, latitude, longitude])
+                            if((episode_length - (self.max_iter - self.num_agents * 24))% self.num_agents == 1):
+                                timeSlot = timeSlot + timedelta(hours=1)
                         
 
                     for reward_state in self.reward_states.keys():
@@ -329,7 +334,7 @@ class RunAgents:
                 frames.append(df)
             df = pd.concat(frames)
             #print(df.head())
-            df.to_excel("../Results/trajectory_"+ self.zone +".xlsx")
+            df.to_excel("../Results/trajectory_" + str(self.beta_3) + "_" + self.zone +".xlsx")
             coverage = self.calculate_coverage(self.k_coverage)
             return coverage
 
@@ -404,27 +409,28 @@ def runSingleAgent(zone,crimes, noOfLngGrid, noOfLatGrid):
         print("Run No. %d" % (run))
         num_agents_array = np.arange(25, 26)  # Number of agents in the grid
         for num_agents in num_agents_array:
-            beta_array = [0.01]  # np.linspace(-20,20,num=50)
-            for beta in beta_array:
+            beta_array = [0.01]  # np.linspace(-20,20,num=50)            
+            beta_3_array = [0,-1,-2.5,-10,-20];
+            for beta_3 in beta_3_array:
                 print("Run = %d, Beta: %2.2f, Num Agents: %2.2d" %
-                      (run, beta, num_agents))
+                      (run, beta_3, num_agents))
                 agents = np.empty([num_agents], dtype=GridWorld)
-                game = RunAgents(zone, crimes, noOfLngGrid, noOfLatGrid, num_agents, True, beta);
+                game = RunAgents(zone, crimes, noOfLngGrid, noOfLatGrid, num_agents, True, 0.01, beta_3);
                 '''if run <= (number_of_runs/2):
                     epsilon = 0.9
                 else:
                     epsilon = 0.2'''
 
 
-            for i in range(num_agents):
-                agents[i] = GridWorld(epsilon=epsilon)
+                for i in range(num_agents):
+                    agents[i] = GridWorld(epsilon=epsilon)
 
-            game.startTraining(agents)
-            # game.loadStates()
-            coverage = game.train(
-                iterations=2000)
-            coverage_array.append([num_agents, coverage])
-            game.saveStates()
+                game.startTraining(agents)
+                # game.loadStates()
+                coverage = game.train(
+                    iterations=2000)
+                coverage_array.append([num_agents, coverage])
+                game.saveStates()
 
 
 
@@ -441,37 +447,48 @@ def getCrimes(db,zone, leftLat,leftLng,rightLat,rightLng):
 
 def saveRoutes(db,zone):
 
-    df = pd.read_excel("../Results/trajectory_"+zone+".xlsx");
 
-    #print(df["TimeSlot"][0])
-    x = datetime.datetime.now()
-    for step in df.itertuples():
-        #print(step[2],zone);
-        loc = db.nearestlocations.find({
-            "zone" : zone,
-            "location": {
-             "$near": {
-              "$geometry": {
-               "type": "Point",
-               "coordinates": [step[4], step[5]]
-              },
-              "$maxDistance": 1000
-             }
-            }
-           });
-        df = pd.DataFrame(loc);
-        
-        lat = 0;
-        lng = 0;
-        if df.size>0:
-            print(df.iloc[0, :].location["coordinates"][0]);
-            lat = df.iloc[0, :].location["coordinates"][0];
-            lng = df.iloc[0, :].location["coordinates"][1];
-        else:
-            lat = step[4];
-            lng = step[5];
+    beta_3_array = [0,-1,-2.5,-10,-20];   
+    db_name = ["","1","2","3","4"]           
 
-        db.vehicles.update_one({"vehicleId" : str(step[2]),"zone":zone},{"$push": {"locations": {"_id":ObjectId(),"createdAt":x,"updatedAt":x,"timeSlot":step[3],"lat":lat,"lng":lng}}});
+
+    for beta_3,name in zip(beta_3_array,db_name):
+
+        df = pd.read_excel("../Results/trajectory_" + str(beta_3) + "_" + zone+".xlsx");
+
+        #print(df["TimeSlot"][0])
+        x = datetime.datetime.now()
+        for step in df.itertuples():
+            #print(step[2],zone);
+            loc = db.nearestlocations.find({
+                "zone" : zone,
+                "location": {
+                 "$near": {
+                  "$geometry": {
+                   "type": "Point",
+                   "coordinates": [step[4], step[5]]
+                  },
+                  "$maxDistance": 1000
+                 }
+                }
+               });
+            df = pd.DataFrame(loc);
+            
+            lat = 0;
+            lng = 0;
+            if df.size>0:
+                print(df.iloc[0, :].location["coordinates"][0]);
+                lat = df.iloc[0, :].location["coordinates"][0];
+                lng = df.iloc[0, :].location["coordinates"][1];
+            else:
+                lat = step[4];
+                lng = step[5];
+
+            loc = "locations" + name;
+
+
+            db.vehicles.update_one({"vehicleId" : str(step[2]),"zone":zone},{"$push": \
+                {loc: {"_id":ObjectId(),"createdAt":x,"updatedAt":x,"timeSlot":step[3],"lat":lat,"lng":lng}}});
 
 if __name__ == "__main__": 
     client = MongoClient(port=27017);    

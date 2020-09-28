@@ -1,0 +1,1 @@
+mongoimport --db conFusion --collection users --file users.json --jsonArray
