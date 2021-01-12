@@ -22,9 +22,9 @@ def getDistance(tuples):
 client = MongoClient(port=27017);    
 db=client.conFusion;
 
-df_crime = getCrimes(db, "KNC", 26.60, 79.70, 26.25, 80.09 );
+df_crime = getCrimes(db, "KNC", 26.9, 79.74, 25.76, 80.75   );
 
-df = pd.read_excel("../Results/trajectory_200_KNC.xlsx")
+df = pd.read_excel("../Results/trajectory_-1_GMTNGR.xlsx")
 df_crime = df_crime[['lat', 'lng']]
 #print(df_crime)
 
@@ -37,7 +37,7 @@ my_map = folium.Map(location=[26.40, 79.85], zoom_start=10)
 #print(df)
 count = 0;   
 dist = 0;   
-'''for agent in allAgents:
+for agent in allAgents:
     temp = df[df['AgentId'] == agent]
     subset = temp[['Latitude', 'Longitude']]
     tuples = [tuple(x) for x in subset.to_numpy()]
@@ -46,7 +46,7 @@ dist = 0;
     dist += (getDistance(tuples));
     count = count + 1;
 
-print(dist)'''
+print(dist)
 
 '''df_manual = pd.read_excel("../Results/ManualPoints3.xlsx")
 subset = df_manual[['Latitude', 'Longitude']]
@@ -54,9 +54,6 @@ tuples = [tuple(x) for x in subset.to_numpy()]
 for mytuple in tuples:
     folium.Marker(mytuple, icon=folium.Icon(color="black", icon='asterisk', prefix='fa')).add_to(my_map);'''
 
-26.60, 79.70, 26.25, 80.09 
-folium.CircleMarker((26.60, 79.70),radius=2).add_to(my_map);
-folium.CircleMarker((26.25, 80.09),radius=2).add_to(my_map);
 
 tuples = [tuple(x) for x in df_crime.to_numpy()]
 folium.plugins.HeatMap(tuples).add_to(my_map)

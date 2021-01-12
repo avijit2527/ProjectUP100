@@ -138,6 +138,7 @@ class RunAgents:
         self.nearest_distance = []
         self.k_coverage = 50 * self.num_agents  # last k steps to calculate coverage
         self.all_states = self.createAllPossibleIndex(self.height, self.width)
+        self.all_reward_states = self.all_states
         self.reward_frequncy = 0.005 * self.num_agents;
         self.reward_parameter = 11;
         self.distance_traveled = 0;
@@ -397,8 +398,8 @@ class RunAgents:
 def plotDiagrams(coverage_array_over_multiple_runs,now,no_of_iter):
 
 
-    #coverage_array_over_multiple_runs = np.array(coverage_array_over_multiple_runs)   
-    #np.save("DistanceTraversedVSResponseTime",coverage_array_over_multiple_runs)  
+    coverage_array_over_multiple_runs = np.array(coverage_array_over_multiple_runs)   
+    np.save("DistanceTraversedVSResponseTime",coverage_array_over_multiple_runs)  
 
 
 
@@ -436,7 +437,7 @@ def runSingleAgent(zone,crimes, noOfLngGrid, noOfLatGrid):
     number_of_runs = 25;
     epsilon = 0.3;
     coverage_array_over_multiple_runs = [];
-    '''for run in range(number_of_runs):
+    for run in range(number_of_runs):
 
         reward_array = []
 
@@ -445,7 +446,7 @@ def runSingleAgent(zone,crimes, noOfLngGrid, noOfLatGrid):
         
         for num_agents in num_agents_array:
             beta_array = [0.01]  # np.linspace(-20,20,num=50)            
-            beta_3_array = [-10];
+            beta_3_array = [0];
             for beta_3 in beta_3_array:
                 iter_array = np.arange(1,52,5);
                 for itr in iter_array:
@@ -464,7 +465,7 @@ def runSingleAgent(zone,crimes, noOfLngGrid, noOfLatGrid):
                     print("Reward",itr,distance_traveled, response_time)
 
 
-        coverage_array_over_multiple_runs.append(reward_array);  '''  
+        coverage_array_over_multiple_runs.append(reward_array);   
     plotDiagrams(coverage_array_over_multiple_runs,now,number_of_runs);
 
 

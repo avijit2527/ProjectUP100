@@ -296,9 +296,9 @@ class RunAgents:
                     self.agents[agent].updateQ(reward, self.find_location(
                         agent), self.possible_moves(agent))
                     agent = (agent + 1) % self.num_agents
-                    if ((i % iterations) ==  10): #(iterations - 1)
-                        print(episode_length)
-                        self.showGrid(self.grid, episode_length, reward)
+                    #if ((i % iterations) ==  10): #(iterations - 1)
+                        #print(episode_length)
+                        #self.showGrid(self.grid, episode_length, reward)
                     # time.sleep(1)
                     '''print(self.find_location(agent))
                         print(self.hist_lat)
@@ -408,10 +408,10 @@ def runSingleAgent(zone,crimes, noOfLngGrid, noOfLatGrid):
         coverage_array = []
 
         print("Run No. %d" % (run))
-        num_agents_array = np.arange(1,2)  # Number of agents in the grid
+        num_agents_array = np.arange(10,11)  # Number of agents in the grid
         for num_agents in num_agents_array:
             beta_array = [0.001]  # np.linspace(-20,20,num=50)            
-            beta_3_array = [0];
+            beta_3_array = [-1];
             for beta_3 in beta_3_array:
                 print("Run = %d, Beta: %2.2f, Num Agents: %2.2d" %
                       (run, beta_3, num_agents))
@@ -429,7 +429,7 @@ def runSingleAgent(zone,crimes, noOfLngGrid, noOfLatGrid):
                 game.startTraining(agents)
                 # game.loadStates()
                 coverage = game.train(
-                    iterations=500)
+                    iterations=10)
                 coverage_array.append([num_agents, coverage])
                 game.saveStates()
 
@@ -500,9 +500,9 @@ if __name__ == "__main__":
         if zone[10] == "ALD":
             continue;
         print(zone[10], zone[10], zone[4], zone[5], zone[7], zone[8]);
-        crimes = getCrimes(db, zone[10],  26.60, 79.70, 26.25, 80.09 );
-        latDiff = abs(  26.60- 26.25);
-        lngDiff = abs(79.70 - 80.09);
+        crimes = getCrimes(db, zone[10], zone[4], zone[5], zone[7], zone[8]);
+        latDiff = abs(  zone[4]- zone[7]);
+        lngDiff = abs (zone[5]- zone[8]);
         latLongRatio = latDiff/lngDiff;
         noOfLngGrid = 30;
         noOfLatGrid = (int)(latLongRatio * noOfLngGrid);

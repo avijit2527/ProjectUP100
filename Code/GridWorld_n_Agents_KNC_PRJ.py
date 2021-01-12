@@ -123,7 +123,7 @@ class RunAgents:
         #print(crimes.head())
         (self.all_reward_states, self.hist_lat, self.hist_long)  = ut.lat_long_to_grid(crimes["lat"], crimes["lng"], self.width, self.height);
         self.reward_states = {}
-        self.max_iter = 1100
+        self.max_iter = 50 * self.num_agents
 
 
 
@@ -407,7 +407,7 @@ def runSingleAgent(zone,crimes, noOfLngGrid, noOfLatGrid):
         coverage_array = []
 
         print("Run No. %d" % (run))
-        num_agents_array = np.arange(25, 26)  # Number of agents in the grid
+        num_agents_array = np.arange(113, 114)  # Number of agents in the grid
         for num_agents in num_agents_array:
             beta_array = [0.01]  # np.linspace(-20,20,num=50)            
             beta_3_array = [0,-1,-2.5,-10,-20];
@@ -428,7 +428,7 @@ def runSingleAgent(zone,crimes, noOfLngGrid, noOfLatGrid):
                 game.startTraining(agents)
                 # game.loadStates()
                 coverage = game.train(
-                    iterations=2000)
+                    iterations=100)
                 coverage_array.append([num_agents, coverage])
                 game.saveStates()
 
