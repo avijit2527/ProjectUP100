@@ -1,0 +1,1 @@
+{"options":{},"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_","ns":"conFusion.nearestlocations"},{"v":{"$numberInt":"2"},"key":{"location":"2dsphere"},"name":"location_2dsphere","ns":"conFusion.nearestlocations","background":true,"2dsphereIndexVersion":{"$numberInt":"3"}}],"uuid":"2e4a8cdec88a4aa7bad34db114daa49b"}

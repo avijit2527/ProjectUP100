@@ -1,0 +1,1 @@
+{"options":{},"indexes":[{"v":{"$numberInt":"2"},"key":{"_id":{"$numberInt":"1"}},"name":"_id_","ns":"conFusion.crimes"},{"v":{"$numberInt":"2"},"unique":true,"key":{"eventId":{"$numberInt":"1"}},"name":"eventId_1","ns":"conFusion.crimes","background":true}],"uuid":"4a126227253a4a96a4c6fe91fef90b16"}

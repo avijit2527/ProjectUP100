@@ -180,7 +180,7 @@ class RunAgents:
             distance = self.find_reward_state_distance(np.array(y), ch)
             if y[0] == location[0] and y[1] == location[1]:
                 # * math.exp(-self.beta * distance)
-                instant_reward += 50 * self.reward_states[y]
+                instant_reward += 1 * self.reward_states[y]
             # print("Distance = %2.2f"%(distance))
             # print(self.reward_states[y] * math.exp(-self.beta * distance) )
 
@@ -335,7 +335,7 @@ class RunAgents:
                 frames.append(df)
             df = pd.concat(frames)
             #print(df.head())
-            df.to_excel("../Results/trajectory_" + str(self.beta_3) + "_" + self.zone +".xlsx")
+            df.to_excel("../Results/zone_1_trajectory_" + str(self.beta_3) + "_" + self.zone +".xlsx")
             coverage = self.calculate_coverage(self.k_coverage)
             return coverage
 
@@ -408,10 +408,10 @@ def runSingleAgent(zone,crimes, noOfLngGrid, noOfLatGrid):
         coverage_array = []
 
         print("Run No. %d" % (run))
-        num_agents_array = np.arange(10,11)  # Number of agents in the grid
+        num_agents_array = np.arange(1,2)  # Number of agents in the grid
         for num_agents in num_agents_array:
-            beta_array = [0.001]  # np.linspace(-20,20,num=50)            
-            beta_3_array = [-1];
+            beta_array = [0.01]  # np.linspace(-20,20,num=50)            
+            beta_3_array = [0,-1];
             for beta_3 in beta_3_array:
                 print("Run = %d, Beta: %2.2f, Num Agents: %2.2d" %
                       (run, beta_3, num_agents))
@@ -429,7 +429,7 @@ def runSingleAgent(zone,crimes, noOfLngGrid, noOfLatGrid):
                 game.startTraining(agents)
                 # game.loadStates()
                 coverage = game.train(
-                    iterations=10)
+                    iterations=100)
                 coverage_array.append([num_agents, coverage])
                 game.saveStates()
 
@@ -499,12 +499,12 @@ if __name__ == "__main__":
     for zone in zones.itertuples():
         if zone[10] == "ALD":
             continue;
-        print(zone[10], zone[10], zone[4], zone[5], zone[7], zone[8]);
-        crimes = getCrimes(db, zone[10], zone[4], zone[5], zone[7], zone[8]);
-        latDiff = abs(  zone[4]- zone[7]);
-        lngDiff = abs (zone[5]- zone[8]);
+        print(zone[10], zone[10], 26.4835, 80.0903, 26.4023, 80.2321);
+        crimes = getCrimes(db, zone[10], 26.4835, 80.0903, 26.4023, 80.2321);
+        latDiff = abs(26.4835 - 26.4023);
+        lngDiff = abs (80.0903 - 80.2321);
         latLongRatio = latDiff/lngDiff;
-        noOfLngGrid = 30;
+        noOfLngGrid = 10;
         noOfLatGrid = (int)(latLongRatio * noOfLngGrid);
         print(zone.zone, noOfLngGrid, noOfLatGrid);
         runSingleAgent(zone[10],crimes,noOfLngGrid,noOfLatGrid);
