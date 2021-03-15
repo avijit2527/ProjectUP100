@@ -24,11 +24,11 @@ def getDistance(tuples):
 client = MongoClient(port=27017);    
 db=client.conFusion;
 
-df_crime = getCrimes(db, "KNC", 26.7459, 79.9290, 26.6883, 80.0508);
+df_crime = getCrimes(db, "KNC", 26.1724, 80.3743, 26.1228,80.4700);
 
 df = pd.read_excel("../Results/trajectory_-1_GMTNGR.xlsx")
 df_crime = df_crime[['lat', 'lng']]
-print(df_crime)
+#print(df_crime)
 
 allAgents = df.AgentId.unique()
 colormap = {0: "darkgreen", 1: "orange", 2: "lightgray", 3: "lightred", 4: "cadetblue", 5: "teal", 6: "purple", 7: "magenta", 8: "blue", 9: "black",
@@ -52,14 +52,6 @@ for agent in allAgents:
 print(dist)
 
 '''
-df_manual = pd.read_excel("../Results/zone_3_trajectory_0_KNC_Mannual.xlsx")
-subset = df_manual[['Latitude', 'Longitude']]
-tuples = [tuple(x) for x in subset.to_numpy()]
-for mytuple in tuples:
-    folium.Marker(mytuple, icon=folium.Icon(color="black", icon='asterisk', prefix='fa')).add_to(my_map);
-
-poly = folium.PolyLine(locations = tuples, color = "gray", width = 50)
-poly.add_to(my_map)
 
 
 def get_float_list(start, stop, size):
@@ -75,7 +67,19 @@ def get_float_list(start, stop, size):
     return result
 
 print("List of unique random numbers between 100, 1000")
-print(get_float_list( 26.6883,26.7459, 24))
+lat_x = (get_float_list(  26.1228,26.1724, 24))
+lng_y = (get_float_list( 80.3743, 80.4700, 24))
+
+
+
+tuples = tuple(zip(lat_x,lng_y))
+for mytuple in tuples:
+    folium.Marker(mytuple, icon=folium.Icon(color="black", icon='asterisk', prefix='fa')).add_to(my_map);
+
+poly = folium.PolyLine(locations = tuples, color = "gray", width = 50)
+poly.add_to(my_map)
+
+
 
 
 tuples = [tuple(x) for x in df_crime.to_numpy()]
@@ -83,4 +87,4 @@ folium.plugins.HeatMap(tuples).add_to(my_map)
 my_map.add_child(plugins.HeatMap(tuples, radius=25))
 my_map.add_child(folium.LatLngPopup());
 
-#my_map.save("../Results/traj.html")
+my_map.save("../Results/traj.html")
